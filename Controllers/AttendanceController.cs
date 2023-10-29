@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MVCTest.Migrations;
 using MVCTest.Models;
 using MVCTest.Models.ViewModels;
 using System.Collections.Generic;
@@ -19,13 +20,13 @@ namespace MVCTest.Controllers
         }
         public IActionResult addIndex()
         {
-            var tupleModel = new Tuple<IEnumerable<Student>, IEnumerable<Subject>>(_db.Students.ToList(), _db.Subjects.ToList());
+            var tupleModel = new Tuple<IEnumerable<Student>, IEnumerable<Models.Subject>>(_db.Students.ToList(), _db.Subjects.ToList());
             return View(tupleModel);
         }
 
         public IActionResult ViewSubject()
         {
-            IEnumerable<Subject> Subjects = _db.Subjects.ToList();
+            IEnumerable<Models.Subject> Subjects = _db.Subjects.ToList();
             return View(Subjects);
         }
 
@@ -44,21 +45,40 @@ namespace MVCTest.Controllers
                         on attendance.StudentId equals student.Id
                         where attendance.SubjectId == model.SubjectId && student.Section == model.Section &&
                         attendance.Date >= model.SelectedDate && attendance.Date <= model.SelectedEndDate
-                        orderby student.Name
-                        select new StudViewModel
+                        group attendance by student.enrollmentNo into g
+                        select new StudentAttendanceViewModel
                         {
-                            enrollmentNo = student.enrollmentNo,
-                            Name = student.Name,
-                            isPresent = attendance.isPresent,
-                            Date = attendance.Date,
-                            TimeSlot = attendance.timeSlot
+                            enrollmentNo = g.Key,
+                            PresentCount = g.Count(a => a.isPresent),
+                            AbsentCount = g.Count(a => !a.isPresent),
+                            TotalCount = g.Count()
                         };
+
+            var query2 = from student in _db.Students
+                         join attendance in _db.Attendances on student.Id equals attendance.StudentId into studentAttendances
+                         from att in studentAttendances
+                         where att.SubjectId == model.SubjectId &&
+                               student.Section == model.Section &&
+                               att.Date >= model.SelectedDate &&
+                               att.Date <= model.SelectedEndDate
+                         group att by new { student.enrollmentNo, student.Name } into g
+                         select new StudentAttendanceViewModel
+                         {
+                             enrollmentNo = g.Key.enrollmentNo,
+                             Name = g.Key.Name,
+                             PresentCount = g.Count(a => a.isPresent),
+                             AbsentCount = g.Count(a => !a.isPresent),
+                             TotalCount = g.Count()
+                         };
+
+
+
 
             var query1 = from subject in _db.Subjects
                          where subject.Id == model.SubjectId
                          select subject.SubjectName;
 
-            Tuple<string, int, IEnumerable<StudViewModel>> trip = new Tuple<string, int, IEnumerable<StudViewModel>>(query1.FirstOrDefault(), model.Section, query.ToList());
+            Tuple<string, int, IEnumerable<StudentAttendanceViewModel>> trip = new Tuple<string, int, IEnumerable<StudentAttendanceViewModel>>(query1.FirstOrDefault(), model.Section, query2.ToList());
 
             return View(trip);
         }
@@ -79,6 +99,7 @@ namespace MVCTest.Controllers
                             AbsentCount = g.Count(a => !a.isPresent),
                             TotalCount = g.Count()
                         };
+
 
             IEnumerable<StudentAttendanceViewModel> result = query.ToList();
 
@@ -135,7 +156,7 @@ namespace MVCTest.Controllers
 
             foreach (var (studentId, present) in model.Attendance)
             {
-                var newAttendance = new Attendance
+                var newAttendance = new Models.Attendance
                 {
                     StudentId = studentId,
                     SubjectId = model.SubjectId,

@@ -1,6 +1,6 @@
 ﻿@using MVCTest.Models.ViewModels
 
-@model Tuple<string, int, IEnumerable<StudViewModel>>
+@model Tuple<string, int, IEnumerable<StudentAttendanceViewModel>>
 
 <h1>Subject Attendance</h1>
 
@@ -14,9 +14,9 @@
         <tr>
             <th>Enrol</th>
             <th>Name</th>
-            <th>Date</th>
-            <th>Time</th>
             <th>Present</th>
+            <th>Absent</th>
+            <th>Total</th>
         </tr>
     </thead>
 
@@ -26,20 +26,9 @@
             <tr>
                 <td>@obj.enrollmentNo</td>
                 <td>@obj.Name</td>
-                <td>@obj.Date.ToString("dd-MMMM-yyyy")</td>
-                <td>@obj.TimeSlot</td>
-                <td>
-                    @if (@obj.isPresent)
-                    {
-                        <p>Yes</p>
-                    } 
-                    else
-                    {
-                        <p>No</p>
-                    }
-
-                </td>
-
+                <td>@obj.PresentCount</td>
+                <td>@obj.AbsentCount</td>
+                <td>@obj.TotalCount</td>
             </tr>
         }
     </tbody>
