@@ -1,0 +1,28 @@
+﻿@model IEnumerable<Student>
+
+<form class="my-3" asp-action="ViewStudentNext" method="post"> 
+    <h2>View Student Attendance</h2>
+
+    <br />
+
+    <select class="form-select" name="StudentId" aria-label="Default select example">
+        <option selected>Select Subject</option>
+        @foreach (var obj in Model)
+        {
+            <option value=@obj.Id>@obj.Name</option>
+        }
+    </select>
+
+    <br />
+
+    <select class="form-select" name="Semester" aria-label="Default select example">
+        <option selected>Select Semester</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+    </select>
+
+    <button type="submit" class="btn btn-primary">Next</button>
+
+</form>

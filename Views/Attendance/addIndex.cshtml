@@ -1,0 +1,57 @@
+﻿@model Tuple<IEnumerable<Student>, IEnumerable<Subject>>
+
+<h1> Attendance </h1>
+
+<form class="my-3" asp-action="formSubmit" method="post">
+
+    <input name="SelectedDate" class="form-control" type="date">
+
+    <br />
+
+    <select class="form-select" name="Semester" aria-label="Default select example">
+        <option selected>Select Semester</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+    </select> 
+
+    <br />
+
+    <select class="form-select" name="SubjectId" aria-label="Default select example">
+        <option selected>Select Subject</option>
+        @foreach (var obj in Model.Item2)
+        {
+            <option value=@obj.Id>@obj.SubjectName</option>
+        }    
+    </select>
+
+    <br />
+
+    <select class="form-select" name="Time" aria-label="Default select example">
+        <option selected>Select Time Slot</option>
+        <option value="9">09:00am</option>
+        <option value="10">10:00am</option>
+        <option value="11">11:15am</option>
+        <option value="12">12:15pm</option>
+        <option value="2">02:00pm</option>
+        <option value="3">03:00pm</option>
+        <option value="4">04:00pm</option>
+        <option value="0">other</option>
+    </select>   
+
+<br />
+
+    <select class="form-select" name="Section" aria-label="Default select example">
+        <option selected>Select Section</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">Evening</option>
+    </select>
+
+    <br />
+
+    <button type="submit" class="btn btn-primary">Next</button>
+
+</form>
+<br />

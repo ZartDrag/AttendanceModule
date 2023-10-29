@@ -1,0 +1,30 @@
+﻿@model IEnumerable<Student>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index Student</h1>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Enrol</th>
+            <th>Name</th>
+            <th>Section</th>
+            <th>CreatedAt</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach(var obj in Model){
+        <tr>
+        <td>@obj.enrollmentNo</td>
+        <td>@obj.Name</td>
+        <td>@obj.Section</td>
+        <td>@obj.createdAt</td>
+        </tr>
+        }
+    </tbody>
+</table>
+

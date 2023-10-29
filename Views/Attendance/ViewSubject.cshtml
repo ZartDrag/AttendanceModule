@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Subject>
+
+<form class="my-3" asp-action="ViewSubjectNext" method="post">
+    <h2>View Attendance by Subject</h2>
+    <br />
+
+    Start Date
+    <input name="SelectedDate" class="form-control" type="date">
+
+    <br />
+
+    End Date
+    <input name="SelectedEndDate" class="form-control" type="date">
+
+
+    <br />
+
+    <select class="form-select" name="SubjectId" aria-label="Default select example">
+        <option selected>Select Subject</option>
+        @foreach (var obj in Model)
+        {
+            <option value=@obj.Id>@obj.SubjectName</option>
+        }
+    </select>
+
+    <br />
+
+    <select class="form-select" name="Section" aria-label="Default select example">
+        <option selected>Select Section</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">Evening</option>
+    </select>
+
+    <br />
+
+    <button type="submit" class="btn btn-primary">Next</button>
+
+</form>

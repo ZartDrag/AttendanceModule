@@ -1,0 +1,39 @@
+﻿@using MVCTest.Models.ViewModels
+
+@model Tuple<Student, float, IEnumerable<StudentAttendanceViewModel>>
+
+<h1>Student Attendance</h1>
+
+<h5>
+    <strong>Name: </strong>  @Model.Item1.Name <br />
+    <strong>Enrolment No: </strong> @Model.Item1.enrollmentNo <br />
+    <strong>Section: </strong> @Model.Item1.Section <br />
+    <strong>Attendance: </strong> @Model.Item2 % <br />
+</h5>
+
+<table class="table table-bordered table-striped my-3">
+    <thead>
+        <tr>
+            <th>Subject</th>
+            <th>Present</th>
+            <th>Absent</th>
+            <th>Total</th>
+            <th>Percentage</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var obj in Model.Item3)
+        {
+            <tr>
+                <td>@obj.Subject</td>
+                <td>@obj.PresentCount</td>
+                <td>@obj.AbsentCount</td>
+                <td>@obj.TotalCount</td>
+                <td>@obj.Percentage %</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+

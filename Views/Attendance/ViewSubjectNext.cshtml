@@ -1,0 +1,48 @@
+﻿@using MVCTest.Models.ViewModels
+
+@model Tuple<string, int, IEnumerable<StudViewModel>>
+
+<h1>Subject Attendance</h1>
+
+<h5>
+    <strong>Subject Name:</strong> @Model.Item1 <br />
+    <strong>Section: </strong> @Model.Item2 <br />
+</h5>
+
+<table class="table table-bordered table-striped my-3">
+    <thead>
+        <tr>
+            <th>Enrol</th>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Present</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var obj in Model.Item3)
+        {
+            <tr>
+                <td>@obj.enrollmentNo</td>
+                <td>@obj.Name</td>
+                <td>@obj.Date.ToString("dd-MMMM-yyyy")</td>
+                <td>@obj.TimeSlot</td>
+                <td>
+                    @if (@obj.isPresent)
+                    {
+                        <p>Yes</p>
+                    } 
+                    else
+                    {
+                        <p>No</p>
+                    }
+
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+
