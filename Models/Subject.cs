@@ -13,5 +13,6 @@ namespace MVCTest.Models
         [AllowNull]
         public string? CourseId { get; set; }
         public string SubjectName { get; set; }
+        public ICollection<Attendance> Subject_Attendance { get; set; }
     }
 }

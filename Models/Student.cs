@@ -15,5 +15,6 @@ namespace MVCTest.Models
         [Required]
         public int Semester { get; set; }
         public DateTime createdAt { get; set; } = DateTime.Now;
+        public ICollection<Attendance> Student_Attendance { get; set; }
     }
 }

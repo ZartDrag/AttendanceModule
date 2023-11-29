@@ -37,54 +37,69 @@ namespace MVCTest.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult ViewSubjectNext(AttendanceViewModel model)
         {
-            var query = from student in _db.Students
-                         join attendance in _db.Attendances on student.Id equals attendance.StudentId into studentAttendances
-                         from att in studentAttendances
-                         where att.SubjectId == model.SubjectId &&
-                               student.Section == model.Section &&
-                               att.Date >= model.SelectedDate &&
-                               att.Date <= model.SelectedEndDate
-                         group att by new { student.enrollmentNo, student.Name } into g
-                         select new StudentAttendanceViewModel
-                         {
-                             enrollmentNo = g.Key.enrollmentNo,
-                             Name = g.Key.Name,
-                             PresentCount = g.Count(a => a.isPresent),
-                             AbsentCount = g.Count(a => !a.isPresent),
-                             TotalCount = g.Count()
-                         };
+            IEnumerable<StudentAttendanceViewModel> studentAttendance = _db.Students
+            .Join(
+                _db.Attendances.Where(a =>
+                    a.SubjectId == model.SubjectId &&
+                    a.Date >= model.SelectedDate &&
+                    a.Date <= model.SelectedEndDate),
+                student => student.Id,
+                attendance => attendance.StudentId,
+                (student, attendance) => new { Student = student, Attendance = attendance }
+            )
+            .Where(joinedData => joinedData.Student.Section == model.Section)
+            .GroupBy(joinedData => new { joinedData.Student.enrollmentNo, joinedData.Student.Name })
+            .Select(g => new StudentAttendanceViewModel
+            {
+                enrollmentNo = g.Key.enrollmentNo,
+                Name = g.Key.Name,
+                PresentCount = g.Count(a => a.Attendance.isPresent),
+                AbsentCount = g.Count(a => !a.Attendance.isPresent),
+                TotalCount = g.Count()
+            })
+            .ToList();
 
-            var query1 = from subject in _db.Subjects
-                         where subject.Id == model.SubjectId
-                         select subject.SubjectName;
+            string subjectName = _db.Subjects
+            .Where(subject => subject.Id == model.SubjectId)
+            .Select(subject => subject.SubjectName)
+            .FirstOrDefault();
 
-            Tuple<string, int, IEnumerable<StudentAttendanceViewModel>> trip = new Tuple<string, int, IEnumerable<StudentAttendanceViewModel>>(query1.FirstOrDefault(), model.Section, query.ToList());
+            Tuple<string, int, IEnumerable<StudentAttendanceViewModel>> trip = new Tuple<string, int, IEnumerable<StudentAttendanceViewModel>>(subjectName, model.Section, studentAttendance);
 
             return View(trip);
         }
 
         public IActionResult ViewStudentNext(int StudentId, int Semester)
         {
-            var query = from attendance in _db.Attendances
-                        join student in _db.Students
-                        on attendance.StudentId equals student.Id
-                        join subject in _db.Subjects
-                        on attendance.SubjectId equals subject.Id
-                        where subject.Semester == Semester && student.Id == StudentId
-                        group attendance by subject.SubjectName into g
-                        select new StudentAttendanceViewModel
-                        {
-                            Subject = g.Key, 
-                            PresentCount = g.Count(a => a.isPresent),
-                            AbsentCount = g.Count(a => !a.isPresent),
-                            TotalCount = g.Count()
-                        };
+            IEnumerable<StudentAttendanceViewModel> studentAttendance = _db.Attendances
+            .Join(
+                _db.Students,
+                attendance => attendance.StudentId,
+                student => student.Id,
+                (attendance, student) => new { Attendance = attendance, Student = student }
+            )
+            .Join(
+                _db.Subjects,
+                joinedData => joinedData.Attendance.SubjectId,
+                subject => subject.Id,
+                (joinedData, subject) => new { joinedData.Attendance, joinedData.Student, Subject = subject }
+            )
+            .Where(joinedData => joinedData.Subject.Semester == Semester && joinedData.Student.Id == StudentId)
+            .GroupBy(joinedData => joinedData.Subject.SubjectName)
+            .Select(g => new StudentAttendanceViewModel
+            {
+                Subject = g.Key,
+                PresentCount = g.Count(a => a.Attendance.isPresent),
+                AbsentCount = g.Count(a => !a.Attendance.isPresent),
+                TotalCount = g.Count()
+            })
+            .ToList();
 
 
             IEnumerable<StudentAttendanceViewModel> result = query.ToList();
 
             float totalPresent = 0, totalAbsent = 0;
-            foreach (var attendance in result)
+            foreach (var attendance in studentAttendance)
             {
                 attendance.Percentage = attendance.PresentCount * 100 / (attendance.PresentCount + attendance.AbsentCount);
                 totalPresent += attendance.PresentCount;
@@ -93,16 +108,18 @@ namespace MVCTest.Controllers
 
             float totalPercentage = totalPresent * 100 / (totalPresent + totalAbsent);
 
-            var query1 = from student in _db.Students
-                         where student.Id == StudentId
-                         select new Student
-                         {
-                             Name = student.Name,
-                             enrollmentNo = student.enrollmentNo,
-                             Section = student.Section
-                         };
 
-            Tuple<Student, float, IEnumerable<StudentAttendanceViewModel>> trip = new Tuple<Student, float, IEnumerable<StudentAttendanceViewModel>>(query1.FirstOrDefault(), totalPercentage, result);
+            Student studentInfo = _db.Students
+            .Where(student => student.Id == StudentId)
+            .Select(student => new Student
+            {
+                Name = student.Name,
+                enrollmentNo = student.enrollmentNo,
+                Section = student.Section
+            })
+            .FirstOrDefault();
+
+            Tuple<Student, float, IEnumerable<StudentAttendanceViewModel>> trip = new Tuple<Student, float, IEnumerable<StudentAttendanceViewModel>>(studentInfo, totalPercentage, studentAttendance);
 
             return View(trip);
         }
