@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MVCTest.Models;
 using MVCTest.Models.ViewModels;
+using static System.Collections.Specialized.BitVector32;
 
 namespace MVCTest.Controllers
 {
@@ -38,24 +40,30 @@ namespace MVCTest.Controllers
         public IActionResult ViewSubjectNext(AttendanceViewModel model)
         {
             IEnumerable<StudentAttendanceViewModel> studentAttendance = _db.Students
-            .Join(
-                _db.Attendances.Where(a =>
-                    a.SubjectId == model.SubjectId &&
-                    a.Date >= model.SelectedDate &&
-                    a.Date <= model.SelectedEndDate),
-                student => student.Id,
-                attendance => attendance.StudentId,
-                (student, attendance) => new { Student = student, Attendance = attendance }
-            )
-            .Where(joinedData => joinedData.Student.Section == model.Section)
-            .GroupBy(joinedData => new { joinedData.Student.enrollmentNo, joinedData.Student.Name })
-            .Select(g => new StudentAttendanceViewModel
+            .Where(student => student.Section == model.Section)
+            .Include(student => student.Student_Attendance)
+                .ThenInclude(attendance => attendance.Subject)
+            .Select(student => new StudentAttendanceViewModel
             {
-                enrollmentNo = g.Key.enrollmentNo,
-                Name = g.Key.Name,
-                PresentCount = g.Count(a => a.Attendance.isPresent),
-                AbsentCount = g.Count(a => !a.Attendance.isPresent),
-                TotalCount = g.Count()
+                enrollmentNo = student.enrollmentNo,
+                Name = student.Name,
+                PresentCount = student.Student_Attendance
+                    .Count(attendance =>
+                        attendance.SubjectId == model.SubjectId &&
+                        attendance.isPresent &&
+                        attendance.Date >= model.SelectedDate &&
+                        attendance.Date <= model.SelectedEndDate),
+                AbsentCount = student.Student_Attendance
+                    .Count(attendance =>
+                        attendance.SubjectId == model.SubjectId &&
+                        !attendance.isPresent &&
+                        attendance.Date >= model.SelectedDate &&
+                        attendance.Date <= model.SelectedEndDate),
+                TotalCount = student.Student_Attendance
+                    .Count(attendance =>
+                        attendance.SubjectId == model.SubjectId &&
+                        attendance.Date >= model.SelectedDate &&
+                        attendance.Date <= model.SelectedEndDate)
             })
             .ToList();
 
@@ -71,32 +79,23 @@ namespace MVCTest.Controllers
 
         public IActionResult ViewStudentNext(int StudentId, int Semester)
         {
+
             IEnumerable<StudentAttendanceViewModel> studentAttendance = _db.Attendances
-            .Join(
-                _db.Students,
-                attendance => attendance.StudentId,
-                student => student.Id,
-                (attendance, student) => new { Attendance = attendance, Student = student }
-            )
-            .Join(
-                _db.Subjects,
-                joinedData => joinedData.Attendance.SubjectId,
-                subject => subject.Id,
-                (joinedData, subject) => new { joinedData.Attendance, joinedData.Student, Subject = subject }
-            )
-            .Where(joinedData => joinedData.Subject.Semester == Semester && joinedData.Student.Id == StudentId)
-            .GroupBy(joinedData => joinedData.Subject.SubjectName)
+            .Include(a => a.Student)
+            .Include(a => a.Subject)
+            .Where(a => a.Subject.Semester == Semester && a.Student.Id == StudentId)
+            .GroupBy(a => a.Subject.SubjectName)
             .Select(g => new StudentAttendanceViewModel
             {
                 Subject = g.Key,
-                PresentCount = g.Count(a => a.Attendance.isPresent),
-                AbsentCount = g.Count(a => !a.Attendance.isPresent),
+                PresentCount = g.Count(a => a.isPresent),
+                AbsentCount = g.Count(a => !a.isPresent),
                 TotalCount = g.Count()
             })
             .ToList();
 
 
-            IEnumerable<StudentAttendanceViewModel> result = query.ToList();
+
 
             float totalPresent = 0, totalAbsent = 0;
             foreach (var attendance in studentAttendance)
