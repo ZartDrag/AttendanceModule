@@ -1,0 +1,88 @@
+﻿@model Tuple<IEnumerable<Subject>, IEnumerable<int>>
+
+<h1> Edit Attendance </h1>
+
+<form class="my-3" asp-action="editFormSubmit" method="post">
+
+    <input name="SelectedDate" class="form-control" type="date">
+
+    <br />
+
+    <select class="form-select" name="Semester" aria-label="Default select example">
+        <option selected>Select Semester</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+    </select>
+
+    <br />
+
+    <select class="form-select" name="SubjectId" aria-label="Default select example">
+        <option selected>Select Subject</option>
+        @foreach (var obj in Model.Item1)
+        {
+            <option value=@obj.Id>@obj.SubjectName</option>
+        }
+    </select>
+
+    <br />
+
+    <select class="form-select" name="Time" aria-label="Default select example">
+        <option selected>Select Time Slot</option>
+        @foreach (var obj in Model.Item2)
+        {
+            @switch(obj)
+            {
+                @case 9:
+                    <option value="9">09:00am</option>
+                    break;
+
+                @case 10:
+                    <option value="10">10:00am</option>
+                    break;
+
+                @case 11:
+                    <option value="11">11:15am</option>
+                    break;
+
+                @case 12:
+                    <option value="12">12:15pm</option>
+                    break;
+
+                @case 2:
+                    <option value="2">02:00pm</option>
+                    break;
+
+                @case 3:
+                    <option value="3">03:00pm</option>
+                    break;
+
+                @case 4:
+                    <option value="4">04:00pm</option>
+                    break;
+
+                @case 0:
+                    <option value="0">Other</option>
+                    break;
+
+
+            }
+        }
+    </select>
+
+    <br />
+
+    <select class="form-select" name="Section" aria-label="Default select example">
+        <option selected>Select Section</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">Evening</option>
+    </select>
+
+    <br />
+
+    <button type="submit" class="btn btn-primary">Next</button>
+
+</form>
+<br />

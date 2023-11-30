@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using MVCTest.Models;
 using MVCTest.Models.ViewModels;
-using static System.Collections.Specialized.BitVector32;
 
 namespace MVCTest.Controllers
 {
@@ -22,7 +21,15 @@ namespace MVCTest.Controllers
             var tupleModel = new Tuple<IEnumerable<Student>, IEnumerable<Subject>>(_db.Students.ToList(), _db.Subjects.ToList());
             return View(tupleModel);
         }
-
+        public IActionResult EditAttendance()
+        {
+            IEnumerable<int> TimeSlots = _db.Attendances.Select(att => att.timeSlot).Distinct().ToList();
+            IEnumerable<Subject> Subjects = _db.Attendances.Select(att => att.Subject).Distinct().ToList();
+            
+            Tuple<IEnumerable<Subject>, IEnumerable<int>> tupp = new Tuple<IEnumerable<Subject>, IEnumerable<int>>(Subjects, TimeSlots);
+            
+            return View(tupp);
+        }
         public IActionResult ViewSubject()
         {
             IEnumerable<Subject> Subjects = _db.Subjects.ToList();
@@ -95,8 +102,6 @@ namespace MVCTest.Controllers
             .ToList();
 
 
-
-
             float totalPresent = 0, totalAbsent = 0;
             foreach (var attendance in studentAttendance)
             {
@@ -144,6 +149,54 @@ namespace MVCTest.Controllers
 
             
             return View(model);
+        }
+
+        [HttpPost]
+        public IActionResult editFormSubmit(AttendanceViewModel model)
+        {
+            IEnumerable<Attendance> AttList = _db.Attendances
+                .Include(a => a.Student)
+                .Where(att => att.Date == model.SelectedDate 
+                       && att.timeSlot == model.Time
+                       && att.Student.Semester == model.Semester 
+                       && att.Student.Section == model.Section)
+                .ToList();
+            
+            model.StudentList = new List<StudViewModel>();
+
+            foreach (var att in AttList)
+            {
+                model.StudentList.Add(new StudViewModel
+                {
+                    Id = att.Student.Id,
+                    enrollmentNo = att.Student.enrollmentNo,
+                    Name = att.Student.Name,
+                    isPresent = att.isPresent
+                });
+            }
+
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public IActionResult EditAttendanceFinal(AttendanceViewModel model)
+        {
+            List<Attendance> attList = _db.Attendances.Where(a => a.SubjectId == model.SubjectId
+                                                               && a.timeSlot == model.Time
+                                                               && a.Date == model.SelectedDate).ToList();
+
+            foreach (var (studentId, present) in model.Attendance)
+            {
+                Attendance atten = attList.Where(a => a.StudentId == studentId).FirstOrDefault();
+
+                if(atten != null)
+                    atten.isPresent = present;
+            }
+
+            _db.SaveChanges();
+
+            return RedirectToAction("Index");
         }
 
         [HttpPost]

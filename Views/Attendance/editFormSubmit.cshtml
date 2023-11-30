@@ -1,0 +1,61 @@
+﻿@using MVCTest.Models.ViewModels
+
+@model AttendanceViewModel
+
+<h1>Student Attendance</h1>
+
+<form class="my-3" asp-action="EditAttendanceFinal" method="post">
+
+    <input type="hidden" name="SelectedDate" value=@Model.SelectedDate>
+    <input type="hidden" name="Semester" value=@Model.Semester>
+    <input type="hidden" name="SubjectId" value=@Model.SubjectId>
+    <input type="hidden" name="Time" value=@Model.Time>
+    <input type="hidden" name="Section" value=@Model.Section>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Enrol</th>
+                <th>Name</th>
+                <th>
+                    Present
+                    <input class="form-check-input mx-3" id="selectAll" type="checkbox" value="true">
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var obj in Model.StudentList)
+            {
+                <tr>
+                    <td>@obj.enrollmentNo</td>
+                    <td>@obj.Name</td>
+                    <td>
+                        <input class="form-check-input mx-3" type="checkbox" asp-for="Attendance[obj.Id]" value="true" checked="@obj.isPresent" onclick="updateAttendance(@obj.Id, this)">
+                        <input type="hidden" asp-for="Attendance[obj.Id]" value="@obj.isPresent">
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<script>
+    const selectAllCheckbox = document.getElementById("selectAll");
+    const itemCheckboxes = document.querySelectorAll(".form-check-input");
+
+    selectAllCheckbox.addEventListener("click", function () {
+        itemCheckboxes.forEach(function (checkbox) {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+    });
+
+    function updateAttendance(itemId, checkbox) {
+        var hiddenInput = document.querySelector('input[type="hidden"][name="Attendance[' + itemId + ']"]');
+        hiddenInput.value = checkbox.checked.toString();
+    }
+</script>
+
+
